@@ -57,10 +57,6 @@ export const useStore = create((set, get) => ({
   setActiveTab: (tab) => set({ activeTab: tab }),
   
   // Auth
-  signIn: async (phone) => {
-    const { data, error } = await supabase.auth.signInWithOtp({ phone })
-    return { data, error }
-  },
   signOut: async () => {
     await supabase.auth.signOut()
     set({ user: null })

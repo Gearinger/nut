@@ -93,6 +93,26 @@ body {
   background: #ccc;
 }
 
+.login-page .error {
+  color: #ff3b30;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.switch-mode {
+  margin-top: 20px;
+  font-size: 14px;
+}
+
+.switch-mode button {
+  background: none;
+  border: none;
+  color: #007AFF;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 4px;
+}
+
 /* Home Page */
 .home-page {
   height: 100%;
