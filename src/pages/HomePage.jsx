@@ -1,14 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
-import Map, { Marker, Popup } from 'react-map-gl'
+import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useStore } from '../stores/useStore'
-import { supabase } from '../lib/supabase'
 import NoteCard from '../components/NoteCard'
 import RoomCard from '../components/RoomCard'
 import WriteNoteModal from '../components/WriteNoteModal'
 import CreateRoomModal from '../components/CreateRoomModal'
-
-// Maplibre 使用免费图床，无需 Token
 
 export default function HomePage() {
   const { 
@@ -16,6 +13,8 @@ export default function HomePage() {
     notes, rooms, setActiveTab, setActiveRoom
   } = useStore()
   
+  const mapContainer = useRef(null)
+  const map = useRef(null)
   const [viewState, setViewState] = useState({
     latitude: 31.2304,
     longitude: 121.4737,
@@ -24,7 +23,26 @@ export default function HomePage() {
   const [selectedNote, setSelectedNote] = useState(null)
   const [showWriteModal, setShowWriteModal] = useState(false)
   const [showCreateRoomModal, setShowCreateRoomModal] = useState(false)
-  const mapRef = useRef()
+
+  // Initialize map
+  useEffect(() => {
+    if (map.current) return
+
+    map.current = new maplibregl.Map({
+      container: mapContainer.current,
+      style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
+      center: [viewState.longitude, viewState.latitude],
+      zoom: viewState.zoom
+    })
+
+    map.current.on('move', () => {
+      setViewState({
+        latitude: map.current.getCenter().lat,
+        longitude: map.current.getCenter().lng,
+        zoom: map.current.getZoom()
+      })
+    })
+  })
 
   // Get current location
   useEffect(() => {
@@ -33,7 +51,7 @@ export default function HomePage() {
         (pos) => {
           const { latitude, longitude } = pos.coords
           setCurrentLocation({ lat: latitude, lng: longitude })
-          setViewState({ ...viewState, latitude, longitude })
+          map.current?.flyTo({ center: [longitude, latitude], zoom: 14 })
         },
         (err) => console.error('定位失败:', err)
       )
@@ -51,68 +69,7 @@ export default function HomePage() {
 
   return (
     <div className="home-page">
-      <div className="map-container">
-        <Map
-          ref={mapRef}
-          {...viewState}
-          onMove={evt => setViewState(evt.viewState)}
-          style={{ width: '100%', height: '100%' }}
-          mapStyle="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
-        >
-          {/* Current location marker */}
-          {currentLocation && (
-            <Marker 
-              latitude={currentLocation.lat} 
-              longitude={currentLocation.lng}
-              anchor="center"
-            >
-              <div className="current-location-marker">📍</div>
-            </Marker>
-          )}
-
-          {/* Note markers */}
-          {notes.map(note => (
-            <Marker
-              key={note.id}
-              latitude={note.lat}
-              longitude={note.lng}
-              anchor="bottom"
-              onClick={e => {
-                e.originalEvent.stopPropagation()
-                handleNoteClick(note)
-              }}
-            >
-              <div className="note-marker">📝</div>
-            </Marker>
-          ))}
-
-          {/* Room markers */}
-          {rooms.map(room => (
-            <Marker
-              key={room.id}
-              latitude={room.lat}
-              longitude={room.lng}
-              anchor="bottom"
-            >
-              <div className="room-marker" onClick={() => handleJoinRoom(room)}>
-                💬
-              </div>
-            </Marker>
-          ))}
-
-          {/* Note popup */}
-          {selectedNote && (
-            <Popup
-              latitude={selectedNote.lat}
-              longitude={selectedNote.lng}
-              anchor="top"
-              onClose={() => setSelectedNote(null)}
-            >
-              <NoteCard note={selectedNote} />
-            </Popup>
-          )}
-        </Map>
-      </div>
+      <div className="map-container" ref={mapContainer} />
 
       {/* Bottom sheets */}
       <div className="bottom-sheet">
