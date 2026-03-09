@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useStore } from './stores/useStore'
+import { supabase } from './lib/supabase'
 import HomePage from './pages/HomePage'
 import ChatPage from './pages/ChatPage'
 import ProfilePage from './pages/ProfilePage'
