@@ -8,46 +8,49 @@ export default function ProfilePage() {
   const [myNotes, setMyNotes] = useState([])
   const [myRooms, setMyRooms] = useState([])
   const [editing, setEditing] = useState(false)
-  const [nickname, setNickname] = useState('')
+  const [username, setUsername] = useState('')
 
   useEffect(() => {
+    if (!user?.id) return
+
     // Fetch profile
     supabase
-      .from('users')
+      .from('nut_users')
       .select('*')
       .eq('id', user.id)
       .single()
       .then(({ data }) => {
         if (data) {
           setProfile(data)
-          setNickname(data.nickname || '')
+          setUsername(data.username || '')
         }
       })
 
     // Fetch my notes
     supabase
-      .from('notes')
+      .from('nut_messages')
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .then(({ data }) => setMyNotes(data || []))
 
     // Fetch my rooms
-      .from('rooms')
+    supabase
+      .from('nut_chats')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('created_by', user.id)
       .order('created_at', { ascending: false })
       .then(({ data }) => setMyRooms(data || []))
-  }, [user.id])
+  }, [user?.id])
 
   const handleUpdateProfile = async () => {
     const { error } = await supabase
-      .from('users')
-      .update({ nickname })
+      .from('nut_users')
+      .update({ username })
       .eq('id', user.id)
     
     if (!error) {
-      setProfile({ ...profile, nickname })
+      setProfile({ ...profile, username })
       setEditing(false)
     }
   }
@@ -66,7 +69,7 @@ export default function ProfilePage() {
             <img src={profile.avatar_url} alt="" />
           ) : (
             <div className="avatar-placeholder large">
-              {nickname?.[0] || '?'}
+              {username?.[0] || '?'}
             </div>
           )}
         </div>
@@ -75,16 +78,16 @@ export default function ProfilePage() {
           <div className="edit-form">
             <input
               type="text"
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              placeholder="昵称"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="用户名"
             />
             <button onClick={handleUpdateProfile}>保存</button>
             <button onClick={() => setEditing(false)}>取消</button>
           </div>
         ) : (
           <div className="profile-info">
-            <h2>{profile?.nickname || '未设置昵称'}</h2>
+            <h2>{profile?.username || '未设置用户名'}</h2>
             <button className="edit-btn" onClick={() => setEditing(true)}>
               编辑资料
             </button>
@@ -99,10 +102,6 @@ export default function ProfilePage() {
           <div className="stat">
             <span className="num">{myRooms.length}</span>
             <span className="label">聊天室</span>
-          </div>
-          <div className="stat">
-            <span className="num">{profile?.credit_score || 100}</span>
-            <span className="label">信用分</span>
           </div>
         </div>
       </div>
@@ -135,7 +134,7 @@ export default function ProfilePage() {
               {myRooms.map(room => (
                 <div key={room.id} className="room-item">
                   <span className="name">{room.name}</span>
-                  <span className="type">{room.type}</span>
+                  <span className="type">{room.is_active ? '活跃' : '已关闭'}</span>
                 </div>
               ))}
             </div>

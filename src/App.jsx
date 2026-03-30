@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useStore } from './stores/useStore'
 import { supabase } from './lib/supabase'
 import HomePage from './pages/HomePage'
+import SquarePage from './pages/SquarePage'
 import ChatPage from './pages/ChatPage'
 import ProfilePage from './pages/ProfilePage'
 import LoginPage from './pages/LoginPage'
@@ -50,6 +51,7 @@ function App() {
     <div className="app">
       <div className="content">
         {activeTab === 'home' && <HomePage />}
+        {activeTab === 'square' && <SquarePage />}
         {activeTab === 'chat' && <ChatPage />}
         {activeTab === 'profile' && <ProfilePage />}
       </div>
@@ -60,6 +62,12 @@ function App() {
           onClick={() => setActiveTab('home')}
         >
           🏠 首页
+        </button>
+        <button 
+          className={`tab ${activeTab === 'square' ? 'active' : ''}`}
+          onClick={() => setActiveTab('square')}
+        >
+          📍 广场
         </button>
         <button 
           className={`tab ${activeTab === 'chat' ? 'active' : ''}`}

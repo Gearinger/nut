@@ -1,30 +1,56 @@
 import { useState } from 'react'
 import { useStore } from '../stores/useStore'
 import { supabase } from '../lib/supabase'
+import { getOrCreateArea } from '../lib/areaHelper'
 
-export default function WriteNoteModal({ location, onClose }) {
+export default function WriteNoteModal({ location, onClose, onSuccess }) {
   const { user } = useStore()
   const [content, setContent] = useState('')
   const [expiry, setExpiry] = useState('24h')
   const [loading, setLoading] = useState(false)
+
+  // 将 expiry 选项转换为实际的 expires_at 时间戳
+  const getExpiresAt = (expiryOption) => {
+    const now = new Date()
+    switch (expiryOption) {
+      case '24h':
+        return new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString()
+      case '7d':
+        return new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      case 'permanent':
+      default:
+        return null
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!content.trim() || !location) return
 
     setLoading(true)
-    const { error } = await supabase.from('notes').insert({
+
+    // 获取或创建区域
+    const area = await getOrCreateArea(location.lat, location.lng)
+    if (!area) {
+      alert('无法获取区域信息')
+      setLoading(false)
+      return
+    }
+
+    const { error } = await supabase.from('nut_messages').insert({
       user_id: user.id,
-      lat: location.lat,
-      lng: location.lng,
+      area_id: area.id,
+      latitude: location.lat,
+      longitude: location.lng,
       content: content.trim(),
-      expiry
+      expires_at: getExpiresAt(expiry)
     })
 
     setLoading(false)
     if (error) {
       alert('发布失败: ' + error.message)
     } else {
+      onSuccess?.()
       onClose()
     }
   }

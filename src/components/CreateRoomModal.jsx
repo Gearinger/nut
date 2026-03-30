@@ -1,30 +1,32 @@
 import { useState } from 'react'
 import { useStore } from '../stores/useStore'
 import { supabase } from '../lib/supabase'
+import { getOrCreateArea } from '../lib/areaHelper'
 
-export default function CreateRoomModal({ location, onClose }) {
-  const { user, setActiveRoom, setActiveTab } = useStore()
+export default function CreateRoomModal({ onClose, onSuccess }) {
+  const { user, currentLocation, setActiveRoom, setActiveTab } = useStore()
   const [name, setName] = useState('')
-  const [type, setType] = useState('temp')
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!name.trim() || !location) return
+    if (!name.trim()) return
 
     setLoading(true)
-    
-    const expiresAt = type === 'temp' 
-      ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
-      : null
 
-    const { data, error } = await supabase.from('rooms').insert({
-      user_id: user.id,
-      lat: location.lat,
-      lng: location.lng,
-      name: name.trim(),
-      type,
-      expires_at: expiresAt
+    // 获取或创建区域
+    const location = currentLocation || { lat: 31.2304, lng: 121.4737 }
+    const area = await getOrCreateArea(location.lat, location.lng)
+    if (!area) {
+      alert('无法获取区域信息')
+      setLoading(false)
+      return
+    }
+
+    const { data, error } = await supabase.from('nut_chats').insert({
+      created_by: user.id,
+      area_id: area.id,
+      name: name.trim()
     }).select().single()
 
     setLoading(false)
@@ -32,6 +34,7 @@ export default function CreateRoomModal({ location, onClose }) {
     if (error) {
       alert('创建失败: ' + error.message)
     } else {
+      onSuccess?.()
       setActiveRoom(data)
       setActiveTab('chat')
       onClose()
@@ -52,18 +55,6 @@ export default function CreateRoomModal({ location, onClose }) {
             maxLength={30}
             autoFocus
           />
-          
-          <div className="type-options">
-            <label>类型:</label>
-            <select value={type} onChange={(e) => setType(e.target.value)}>
-              <option value="temp">⏰ 临时 (24小时后解散)</option>
-              <option value="permanent">📌 永久</option>
-            </select>
-          </div>
-          
-          <div className="location-info">
-            📍 {location ? `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}` : '获取中...'}
-          </div>
 
           <div className="modal-actions">
             <button type="button" onClick={onClose}>取消</button>

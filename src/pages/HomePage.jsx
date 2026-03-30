@@ -10,7 +10,8 @@ import CreateRoomModal from '../components/CreateRoomModal'
 export default function HomePage() {
   const { 
     currentLocation, setCurrentLocation,
-    notes, rooms, setActiveTab, setActiveRoom
+    notes, rooms, setActiveTab, setActiveRoom,
+    fetchNotes, fetchRooms
   } = useStore()
   
   const mapContainer = useRef(null)
@@ -46,6 +47,9 @@ export default function HomePage() {
 
   // Get current location
   useEffect(() => {
+    // 默认位置（上海）
+    const defaultLocation = { lat: 31.2304, lng: 121.4737 }
+    
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -53,8 +57,14 @@ export default function HomePage() {
           setCurrentLocation({ lat: latitude, lng: longitude })
           map.current?.flyTo({ center: [longitude, latitude], zoom: 14 })
         },
-        (err) => console.error('定位失败:', err)
+        (err) => {
+          console.warn('定位失败，使用默认位置:', err.message)
+          setCurrentLocation(defaultLocation)
+        },
+        { timeout: 5000, maximumAge: 60000 }
       )
+    } else {
+      setCurrentLocation(defaultLocation)
     }
   }, [])
 
@@ -67,6 +77,12 @@ export default function HomePage() {
     setActiveTab('chat')
   }
 
+  const handleRefreshNotes = () => {
+    if (currentLocation) {
+      fetchNotes(currentLocation.lat, currentLocation.lng)
+    }
+  }
+
   return (
     <div className="home-page">
       <div className="map-container" ref={mapContainer} />
@@ -75,10 +91,14 @@ export default function HomePage() {
       <div className="bottom-sheet">
         <div className="nearby-list">
           <h3>📝 附近留言 ({notes.length})</h3>
-          <div className="notes-scroll">
-            {notes.slice(0, 5).map(note => (
-              <NoteCard key={note.id} note={note} horizontal />
-            ))}
+          <div className="notes-list">
+            {notes
+              .slice()
+              .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+              .slice(0, 5)
+              .map(note => (
+                <NoteCard key={note.id} note={note} onRefresh={handleRefreshNotes} />
+              ))}
           </div>
           
           <h3>💬 热门聊天 ({rooms.length})</h3>
@@ -102,13 +122,14 @@ export default function HomePage() {
       {showWriteModal && (
         <WriteNoteModal 
           location={currentLocation} 
-          onClose={() => setShowWriteModal(false)} 
+          onClose={() => setShowWriteModal(false)}
+          onSuccess={handleRefreshNotes}
         />
       )}
       {showCreateRoomModal && (
         <CreateRoomModal 
-          location={currentLocation} 
-          onClose={() => setShowCreateRoomModal(false)} 
+          onClose={() => setShowCreateRoomModal(false)}
+          onSuccess={fetchRooms}
         />
       )}
     </div>

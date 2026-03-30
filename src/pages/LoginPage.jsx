@@ -16,20 +16,55 @@ export default function LoginPage() {
 
     if (isLogin) {
       // 登录
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      })
-      if (error) setError(error.message)
-    } else {
-      // 注册
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       })
       if (error) {
         setError(error.message)
-      } else {
+      } else if (data.user) {
+        // 确保 nut_users 表中有该用户记录
+        // 先检查是否存在
+        const { data: existingUser } = await supabase
+          .from('nut_users')
+          .select('id')
+          .eq('id', data.user.id)
+          .single()
+
+        if (!existingUser) {
+          // 用户不存在，创建新记录
+          const { error: insertError } = await supabase.from('nut_users').insert({
+            id: data.user.id,
+            username: email.split('@')[0]
+          })
+          if (insertError) {
+            console.error('创建用户记录失败:', insertError)
+          }
+        }
+      }
+    } else {
+      // 注册
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password
+      })
+      if (error) {
+        setError(error.message)
+      } else if (data.user) {
+        // 在 nut_users 表中创建用户记录
+        const { error: insertError } = await supabase.from('nut_users').insert({
+          id: data.user.id,
+          username: email.split('@')[0]
+        })
+        if (insertError) {
+          console.error('创建用户记录失败:', insertError)
+          // 如果是重复键错误，忽略
+          if (!insertError.message.includes('duplicate')) {
+            setError('创建用户失败: ' + insertError.message)
+            setLoading(false)
+            return
+          }
+        }
         alert('注册成功！请登录')
         setIsLogin(true)
       }
