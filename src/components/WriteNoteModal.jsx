@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useStore } from '../stores/useStore'
 import { supabase } from '../lib/supabase'
 import { getOrCreateArea } from '../lib/areaHelper'
+import { runWriteWithProfileHeal } from '../lib/flowerAuth'
 
 export default function WriteNoteModal({ location, onClose, onSuccess }) {
   const { user } = useStore()
@@ -37,22 +38,27 @@ export default function WriteNoteModal({ location, onClose, onSuccess }) {
       return
     }
 
-    const { error } = await supabase.from('nut_messages').insert({
-      user_id: user.id,
-      area_id: area.id,
-      latitude: location.lat,
-      longitude: location.lng,
-      content: content.trim(),
-      expires_at: getExpiresAt(expiry)
-    })
+    // 包一层自愈：档案缺失撞外键时先补档案再重试一次
+    const { failure } = await runWriteWithProfileHeal(supabase, user, '发布', (client) =>
+      client.from('nut_messages').insert({
+        user_id: user.id,
+        area_id: area.id,
+        latitude: location.lat,
+        longitude: location.lng,
+        content: content.trim(),
+        expires_at: getExpiresAt(expiry)
+      }).select().single()
+    )
 
     setLoading(false)
-    if (error) {
-      alert('发布失败: ' + error.message)
-    } else {
-      onSuccess?.()
-      onClose()
+
+    // 不只看 error：RLS 拦截时可能没有 error，但一条都没写进去
+    if (failure) {
+      alert(failure)
+      return
     }
+    onSuccess?.()
+    onClose()
   }
 
   return (
