@@ -1,75 +1,71 @@
 import { useState } from 'react'
-import { useStore } from '../stores/useStore'
 import { supabase } from '../lib/supabase'
+import {
+  flowerEmail,
+  validateFlowerName,
+  FLOWER_NAME_MAX,
+  FLOWER_PASSWORD,
+  ensureProfile,
+} from '../lib/flowerAuth'
 
+/**
+ * 花名登录：填个花名 / 企微名直接进，不注册、不要邮箱密码。
+ *
+ * 底层仍然是 Supabase Auth（RLS 要用到 auth.uid()），
+ * 所以做法是「花名 → 确定性邮箱 → 自动登录」：
+ * 先尝试登录，没注册过就自动注册，同名花名会落到同一个账号。
+ */
 export default function LoginPage() {
-  const [isLogin, setIsLogin] = useState(true)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState('')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true)
-    setError(null)
-
-    if (isLogin) {
-      // 登录
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      })
-      if (error) {
-        setError(error.message)
-      } else if (data.user) {
-        // 确保 nut_users 表中有该用户记录
-        // 先检查是否存在
-        const { data: existingUser } = await supabase
-          .from('nut_users')
-          .select('id')
-          .eq('id', data.user.id)
-          .single()
-
-        if (!existingUser) {
-          // 用户不存在，创建新记录
-          const { error: insertError } = await supabase.from('nut_users').insert({
-            id: data.user.id,
-            username: email.split('@')[0]
-          })
-          if (insertError) {
-            console.error('创建用户记录失败:', insertError)
-          }
-        }
-      }
-    } else {
-      // 注册
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password
-      })
-      if (error) {
-        setError(error.message)
-      } else if (data.user) {
-        // 在 nut_users 表中创建用户记录
-        const { error: insertError } = await supabase.from('nut_users').insert({
-          id: data.user.id,
-          username: email.split('@')[0]
-        })
-        if (insertError) {
-          console.error('创建用户记录失败:', insertError)
-          // 如果是重复键错误，忽略
-          if (!insertError.message.includes('duplicate')) {
-            setError('创建用户失败: ' + insertError.message)
-            setLoading(false)
-            return
-          }
-        }
-        alert('注册成功！请登录')
-        setIsLogin(true)
-      }
+    const displayName = name.trim()
+    const invalid = validateFlowerName(displayName)
+    if (invalid) {
+      setError(invalid)
+      return
     }
-    setLoading(false)
+    if (loading) return // 防重复提交
+
+    setLoading(true)
+    setError('')
+    try {
+      const email = flowerEmail(displayName)
+
+      // 先按已注册的用户登录；失败说明这个名字还没用过，自动注册一个
+      const signed = await supabase.auth.signInWithPassword({
+        email,
+        password: FLOWER_PASSWORD,
+      })
+      let data = signed.data
+
+      if (!data?.user) {
+        const up = await supabase.auth.signUp({ email, password: FLOWER_PASSWORD })
+        if (up.error && !up.data?.user) {
+          // 注册也失败（服务不可达 / 实例关闭注册）才报错
+          setError('进入失败：' + (up.error.message || signed.error?.message || '未知错误'))
+          return
+        }
+        data = up.data
+      }
+
+      const userId = data?.user?.id
+      if (!userId) {
+        setError('进入失败：没有拿到登录身份，请重试')
+        return
+      }
+
+      const profileError = await ensureProfile(supabase, userId, displayName)
+      if (profileError) {
+        setError(profileError)
+        return
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -77,36 +73,26 @@ export default function LoginPage() {
       <div className="logo">🐿️ 松鼠</div>
       <h1>位置社交</h1>
       <p>发现附近的精彩</p>
-      
+
       <form onSubmit={handleSubmit}>
         <input
-          type="email"
-          placeholder="邮箱"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="你的花名 / 企微名"
+          maxLength={FLOWER_NAME_MAX}
+          autoFocus
         />
-        <input
-          type="password"
-          placeholder="密码"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          minLength={6}
-        />
-        
+
         {error && <p className="error">{error}</p>}
-        
-        <button type="submit" disabled={loading}>
-          {loading ? '处理中...' : isLogin ? '登录' : '注册'}
+
+        <button type="submit" disabled={loading || !name.trim()}>
+          {loading ? '进入中...' : '进入'}
         </button>
       </form>
-      
-      <p className="switch-mode">
-        {isLogin ? '没有账号？' : '已有账号？'}
-        <button type="button" onClick={() => setIsLogin(!isLogin)}>
-          {isLogin ? '注册' : '登录'}
-        </button>
+
+      <p className="login-hint">
+        不用注册，填个名字就能用。换台设备填同一个名字，还是你的数据。
       </p>
     </div>
   )
