@@ -23,3 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.env.production
+
+# 工具与发布产物：不是源码，提交进去只会让仓库每次都脏
+.workbuddy/
+.wbapp_*.genie
+# deploy/site 是 vite 构建输出（等同 dist），deploy/server.js + package.json 才是源码
+deploy/site/

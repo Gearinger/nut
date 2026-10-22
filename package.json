@@ -7,8 +7,16 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "test": "node tests/fence.test.mjs && node tests/coords.test.mjs && node tests/dbError.test.mjs && node tests/avatar.test.mjs && node tests/flowerAuth.test.mjs && node tests/rooms.test.mjs",
+    "test:fence": "node tests/fence.test.mjs",
+    "test:coords": "node tests/coords.test.mjs",
+    "test:dberror": "node tests/dbError.test.mjs",
+    "test:avatar": "node tests/avatar.test.mjs",
+    "test:flower": "node tests/flowerAuth.test.mjs",
+    "test:rooms": "node tests/rooms.test.mjs",
     "preview": "vite preview",
-    "deploy": "npm run build && gh-pages -d dist"
+    "deploy": "npm run build && gh-pages -d dist",
+    "build:live": "vite build --base=./ --outDir deploy/site --emptyOutDir"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.98.0",

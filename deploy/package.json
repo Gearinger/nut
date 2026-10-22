@@ -1,0 +1,5 @@
+{
+  "name": "nut-live",
+  "private": true,
+  "scripts": { "start": "node server.js" }
+}

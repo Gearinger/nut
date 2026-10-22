@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>此时此地（Nut）· 参赛说明</title>
+<style>
+  :root{
+    --ink:#1c1f23; --ink-2:#4a5158; --ink-3:#7b838c;
+    --bg:#f7f6f3; --card:#ffffff; --line:#e6e3dd;
+    --brand:#0F6E56; --brand-soft:#e8f2ee;
+    --accent:#534AB7; --accent-soft:#efecfb;
+    --warn:#b45309; --warn-soft:#fdf3e3;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    line-height:1.75; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:880px; margin:0 auto; padding:48px 24px 80px}
+  header{margin-bottom:32px}
+  .kicker{font-size:13px; letter-spacing:.12em; color:var(--ink-3); text-transform:uppercase}
+  h1{font-size:38px; line-height:1.25; margin:10px 0 6px; letter-spacing:-.01em}
+  .sub{font-size:15px; color:var(--ink-2); margin:0}
+  .meta{font-size:13px; color:var(--ink-3); margin-top:10px}
+  .meta span{margin-right:14px}
+
+  .hero{
+    background:var(--card); border:1px solid var(--line); border-left:4px solid var(--brand);
+    border-radius:14px; padding:22px 24px; margin:24px 0 20px;
+  }
+  .hero .label{font-size:12px; letter-spacing:.1em; color:var(--brand); font-weight:600}
+  .hero p{font-size:19px; line-height:1.7; margin:10px 0 0; font-weight:500}
+  .hero .punch{font-size:15px; color:var(--ink-2); font-weight:400; margin-top:12px}
+
+  .link-card{
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    background:var(--brand-soft); border:1px solid #cfe4dc; border-radius:12px;
+    padding:14px 18px; margin-bottom:36px;
+  }
+  .link-card .t{font-size:13px; color:var(--brand); font-weight:600}
+  .link-card a{font-size:15px; color:var(--brand); text-decoration:none; font-weight:600; word-break:break-all}
+  .link-card a:hover{text-decoration:underline}
+
+  section{margin:40px 0}
+  h2{
+    font-size:22px; margin:0 0 6px; padding-bottom:10px; border-bottom:1px solid var(--line);
+    display:flex; align-items:baseline; gap:10px;
+  }
+  h2 .n{font-size:13px; color:var(--ink-3); font-weight:400}
+  h3{font-size:16px; margin:26px 0 8px}
+  p{margin:10px 0}
+  ul{margin:10px 0; padding-left:20px}
+  li{margin:5px 0}
+  strong{font-weight:600}
+  .lead{font-size:16px; color:var(--ink-2)}
+
+  table{width:100%; border-collapse:collapse; margin:14px 0; font-size:14.5px; background:var(--card);
+        border:1px solid var(--line); border-radius:10px; overflow:hidden}
+  th{background:#f2f0eb; text-align:left; padding:11px 14px; font-weight:600; font-size:13.5px; color:var(--ink-2)}
+  td{padding:11px 14px; border-top:1px solid var(--line); vertical-align:top}
+  tr:first-child td{border-top:none}
+
+  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; margin:16px 0}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 18px}
+  .card .tag{font-size:12px; font-weight:600; color:var(--accent)}
+  .card h4{margin:6px 0 6px; font-size:15px}
+  .card p{margin:0; font-size:14px; color:var(--ink-2)}
+
+  .lesson{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:0; margin:16px 0; overflow:hidden}
+  .lesson .head{padding:14px 20px; background:#f2f0eb; font-weight:600; font-size:15px; display:flex; gap:10px}
+  .lesson .head .idx{color:var(--accent)}
+  .lesson .body{padding:16px 20px}
+  .lesson .row{display:flex; gap:10px; margin:8px 0; font-size:14.5px}
+  .lesson .row .k{flex:0 0 62px; color:var(--ink-3); font-size:13px; padding-top:2px}
+  .lesson .row .v{flex:1}
+  .lesson .fb{margin-top:12px; padding:10px 14px; background:var(--accent-soft); border-radius:8px; font-size:14px; color:#3a3488}
+
+  .note{background:var(--warn-soft); border:1px solid #f0dcb8; border-radius:10px; padding:12px 16px; font-size:14px; color:#7c4a03; margin:14px 0}
+  code{background:#f2f0eb; padding:1px 6px; border-radius:4px; font-size:13px;
+       font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .steps{counter-reset:s; list-style:none; padding:0; margin:14px 0}
+  .steps li{counter-increment:s; position:relative; padding-left:38px; margin:12px 0; font-size:15px}
+  .steps li::before{
+    content:counter(s); position:absolute; left:0; top:2px;
+    width:24px; height:24px; border-radius:50%; background:var(--brand); color:#fff;
+    font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:center;
+  }
+  footer{margin-top:56px; padding-top:20px; border-top:1px solid var(--line); font-size:13px; color:var(--ink-3)}
+  .closing{margin-top:36px; padding:20px 24px; background:var(--card); border:1px solid var(--line);
+           border-radius:12px; font-size:16px; text-align:center; color:var(--ink-2)}
+  @media (max-width:600px){
+    .wrap{padding:32px 16px 60px} h1{font-size:29px} .hero p{font-size:17px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="kicker">「图个好玩」大地图全员手搓赛 · 参赛说明</div>
+    <h1>此时此地（Nut）</h1>
+    <p class="sub">一个以地理围栏为唯一通行证、以时间为边界的临时信息板</p>
+    <div class="meta">
+      <span>宫赫（hermygong）· 腾讯地图</span>
+      <span>Web（PC / 移动自适应）+ React Native 同源实现</span>
+      <span>LBS + 社交</span>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div class="label">一句话说明</div>
+    <p>给「正好也在现场」的人一个临时信息板：以地理围栏为唯一通行证、以时间为边界——堵车时问一句前面怎么了、演唱会里找同好、市集上喊一嗓子；人离开这片范围，内容就自动失效。</p>
+    <p class="punch">不需要加好友，不需要进群，不需要关注。<strong>人在那儿，就能说话。</strong></p>
+  </div>
+
+  <div class="link-card">
+    <span class="t">在线体验</span>
+    <a href="https://nut-here-now.app-tencent.workbuddy.host/">https://nut-here-now.app-tencent.workbuddy.host/</a>
+  </div>
+
+  <section>
+    <h2><span>怎么用</span><span class="n">三步走查</span></h2>
+    <ol class="steps">
+      <li><strong>打开链接 → 填个花名就能进</strong>（不用注册、不用邮箱密码），然后允许定位。地图飞到你所在的位置；定位失败会直接告诉你原因（权限被拒 / 无信号 / 超时）并给「重新定位」按钮，不会悄悄把你丢到一个陌生城市。</li>
+      <li><strong>看附近。</strong>地图上 📝 是别人留下的留言，紫色虚线面是别人划的聊天室范围，点开就能看。</li>
+      <li><strong>参与。</strong>点 📝 写一条留言（选时效 24h / 7 天 / 永久）；点 💬 在图上圈一块地、起个名字，就建好了一个「只在圈内有效」的聊天室。走出这个圈，消息自动置灰、输入框禁用。</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span>为什么做这个</span><span class="n">附近正在消亡</span></h2>
+    <p class="lead">我们的线上信息流越来越「全球」、越来越「永久」，反而把「身边」弄丢了。</p>
+    <p>每天我们有大量时间和几百个陌生人<strong>共处同一片物理空间</strong>——同一段堵死的高架、同一个看台、同一个市集棚子、同一场临时活动。这些时刻天然有强烈的交流动机：前方到底怎么回事？有没有人一起拼车？这个摊主收摊了吗？但现实中没有任何工具能让我们说上一句话。能做的只有打开一个全国甚至全球的信息流，看跟你此刻处境毫无关系的内容。</p>
+    <p>问题不在于没有信息，而在于<strong>信息交换的前置动作太重了</strong>：加好友、进群、关注、等审核。而「同处一个空间」这件事本身，其实已经是最强的相关性证明——它比任何算法推荐都准。</p>
+    <p>所以「此时此地」只做一件事：<strong>把「在场」变成唯一的准入条件，把「离场」变成内容的自然终点。</strong></p>
+
+    <h3>三条设计原则</h3>
+    <table>
+      <tr><th style="width:120px">原则</th><th style="width:220px">含义</th><th>产品化</th></tr>
+      <tr><td><strong>空间即权限</strong></td><td>位置本身就是身份，不需要额外认证</td><td>聊天室 = 地理围栏，围栏内可聊，围栏外只读</td></tr>
+      <tr><td><strong>时间即边界</strong></td><td>信息有寿命，跟场景寿命对齐</td><td>留言可选 24 小时（快讯）/ 7 天（日常）/ 永久</td></tr>
+      <tr><td><strong>离场即失效</strong></td><td>人走了，内容就该安静下来</td><td>离开围栏，消息置灰、输入框禁用，可读不可写</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2><span>为谁解决什么</span><span class="n">四个场景</span></h2>
+    <table>
+      <tr><th style="width:120px">场景</th><th style="width:150px">谁在用</th><th style="width:230px">说什么</th><th>为什么要「在场才算」</th></tr>
+      <tr><td><strong>堵车</strong></td><td>同一段拥堵路段的司机</td><td>「前方事故占用两条道，大概 20 分钟」「右侧辅路能绕出去」</td><td>路况只在接下来 20 分钟、前后 2 公里内有效；离开这段路，这条信息就是噪音</td></tr>
+      <tr><td><strong>演唱会 / 赛事</strong></td><td>同一场馆、同一看区的人</td><td>「有人一起拼车回去吗」「B 口安检人少」「内场有没有人掉了个耳机」</td><td>需要确认对方真的在场，否则会被黄牛、外地网友灌满</td></tr>
+      <tr><td><strong>线下市集 / 创意园</strong></td><td>摊主与逛的人</td><td>「今天延长到 21 点」「这个摊还剩最后 3 个」「明天还来吗」</td><td>只有走到摊位附近的人才需要知道，全城推送没意义</td></tr>
+      <tr><td><strong>临时活动 / 快闪</strong></td><td>活动组织者与参与者</td><td>集合点变更、临时通知、现场互助</td><td>活动结束即失效，天然带时间边界，不需要人工清理</td></tr>
+    </table>
+    <p style="font-size:14px;color:var(--ink-3)">延伸可覆盖：景区导览互助、社区邻里、商场门店活动、展会现场。</p>
+  </section>
+
+  <section>
+    <h2><span>地图在图面里干了什么</span><span class="n">硬要求自检</span></h2>
+    <div class="note"><strong>判定标准：去掉地图，这个作品还成立吗？——不成立。</strong>因为本作品的准入、可见范围、内容寿命<strong>全部由空间决定</strong>。抽掉地图，「围栏」无从划定，「在场」无从判断，整个产品逻辑直接消失。</div>
+
+    <table>
+      <tr><th style="width:110px">图层</th><th>内容</th><th style="width:150px">随数据变化</th></tr>
+      <tr><td><strong>底图</strong></td><td>腾讯地图瓦片，4 种预设风格实时切换（标准 / 简洁 / 灰色 / 蓝色），最高 z18</td><td>—</td></tr>
+      <tr><td><strong>留言打点</strong></td><td>📝 marker，附近未过期的留言一一点在地图上，点击弹窗看作者与正文</td><td>有人发就长出来，过期就消失</td></tr>
+      <tr><td><strong>围栏面</strong></td><td>聊天室的地理范围以多边形面渲染（半透明填充 + 虚线描边）</td><td>有人建聊天室就多一块面，形状由创建者决定</td></tr>
+      <tr><td><strong>我的位置</strong></td><td>实时定位 marker</td><td>跟随定位</td></tr>
+      <tr><td><strong>草稿围栏</strong></td><td>创建聊天室时实时预览的紫色围栏（圆 / 手绘多边形）</td><td>拖拽即时重绘</td></tr>
+    </table>
+
+    <h3>能点、能筛</h3>
+    <ul>
+      <li><strong>点</strong>：点 marker 看留言内容，点围栏卡片进聊天室</li>
+      <li><strong>筛</strong>：过期留言在查询层就被过滤（<code>expires_at</code> 早于当前时间的不返回），不会出现在图上</li>
+      <li><strong>画</strong>：创建聊天室时可在图上<strong>拖拽圆心、拖拽半径手柄</strong>，或<strong>逐点点击手绘多边形</strong>（最多 12 个顶点）</li>
+    </ul>
+
+    <h3>四种围栏尺度 —— 把抽象的「附近」翻译成人能懂的单位</h3>
+    <div class="grid">
+      <div class="card"><div class="tag">100 m</div><h4>一栋楼 / 一家店</h4><p>市集摊位、门店活动</p></div>
+      <div class="card"><div class="tag">300 m（默认）</div><h4>一个街区</h4><p>堵车路段、社区活动</p></div>
+      <div class="card"><div class="tag">1 km</div><h4>一个园区</h4><p>创意园、景区片区</p></div>
+      <div class="card"><div class="tag">3 km</div><h4>一片城区</h4><p>演唱会场馆周边、大型赛事</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span>技术做法</span><span class="n">最小路径 + 三个不偷懒的地方</span></h2>
+    <table>
+      <tr><th style="width:90px">层</th><th>选型</th></tr>
+      <tr><td>前端</td><td>React 18 + Vite + maplibre-gl + zustand</td></tr>
+      <tr><td>后端</td><td>Supabase（Postgres + Realtime + Auth + RLS）</td></tr>
+      <tr><td>底图</td><td>腾讯地图瓦片，用 maplibre 的 <code>addProtocol</code> 自定义 <code>tmap://</code> 协议，在前端消化 TMS 行号翻转与子域规则，不需要后端代理</td></tr>
+      <tr><td>移动端</td><td>React Native 0.83 + Expo + react-native-maps，与 Web 共享同一套围栏 / 坐标逻辑</td></tr>
+    </table>
+    <div class="grid">
+      <div class="card"><div class="tag">01 · 坐标系</div><h4>WGS-84 ↔ GCJ-02</h4><p>库里统一存 WGS-84，渲染前整体转 GCJ-02，用户拖拽 / 点击取到的底图坐标再转回入库。不做这一步，留言会漂到马路对面。</p></div>
+      <div class="card"><div class="tag">02 · 围栏判定</div><h4>端上算，不靠数据库</h4><p>数据库只能做矩形粗筛。圆形用 Haversine 球面距离，多边形用射线法；多边形还要算质心与外接半径。</p></div>
+      <div class="card"><div class="tag">03 · 测试</div><h4>几何规则必须有断言</h4><p>把地理规则抽成纯函数并写单测：Web 端 103 个用例（围栏 59 + 坐标 44），全绿。</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span>用 AI 工具做地图应用的心得与反馈</span><span class="n">本次最想留下的部分</span></h2>
+    <p class="lead">结论先说：最小路径确实成立——调一个底图 + 铺一层自己的数据，一天能出原型。真正难的从来不是渲染，是「数据怎么和空间绑定」这个产品问题，以及地理这块「看起来简单、错了又很难发现」的细节。</p>
+
+    <div class="lesson">
+      <div class="head"><span class="idx">01</span>「不需要懂坐标系」是本次最大的错觉</div>
+      <div class="body">
+        <div class="row"><div class="k">现象</div><div class="v">我在武汉，地图却显示我在上海；留言打点全漂到隔壁街区。</div></div>
+        <div class="row"><div class="k">根因</div><div class="v">两个独立问题叠加：① 定位拿到的坐标是对的，但 <code>flyTo</code> 在地图 style 加载完成之前被调用，会被 maplibre <strong>静默丢弃</strong>，地图一直停在初始默认城市（上海）；② 换上腾讯底图后，WGS-84 坐标直接画在 GCJ-02 底图上，武汉实测偏 586 米。</div></div>
+        <div class="fb"><strong>反馈建议：</strong>定位「看起来成功但显示错城市」是新手最容易卡死的地方。希望平台 / 文档把两件事显式提醒：定位成功 ≠ 地图会飞过去，要等 mapload；接国内底图第一步就是确认坐标系，并提供一行能用的转换函数。这两句话能省掉一个下午。</div>
+      </div>
+    </div>
+
+    <div class="lesson">
+      <div class="head"><span class="idx">02</span>地图是状态机，不是组件 —— AI 在这里最自信也最容易错</div>
+      <div class="body">
+        <div class="row"><div class="k">四个坑</div><div class="v">
+          切 tab 不调 <code>map.remove()</code>，反复挂载会累积 WebGL context，直到<strong>地图黑屏</strong>；<br>
+          <code>flyTo</code> 早于 style 加载 → 被静默丢弃；<br>
+          用 <code>move</code> 而不是 <code>moveend</code> 监听视野，每帧 <code>setState</code> 导致整页高频重渲染；<br>
+          拖拽手柄的 effect 依赖里写了中心 / 半径，拖动过程中 marker 被重建，<strong>手势直接断掉</strong>（正确做法：依赖只留 shape，用 <code>setLngLat()</code> 更新位置，拖拽期间不回写）。
+        </div></div>
+        <div class="fb"><strong>反馈建议：</strong>这类「能跑但会慢慢坏掉」的问题，静态检查查不出来。建议平台提供一份「地图生命周期检查清单」（初始化 / 销毁 / 事件订阅 / 覆盖物回收），让 AI 生成后逐项自查。</div>
+      </div>
+    </div>
+
+    <div class="lesson">
+      <div class="head"><span class="idx">03</span>让 AI 写地理逻辑，要把规则拆成可测试的纯函数</div>
+      <div class="body">
+        <div class="row"><div class="k">问题</div><div class="v">点在多边形内、Haversine 距离、坐标双向转换——AI 一次写对的概率不到一半，而且<strong>写错了不会报错，只会位置悄悄偏一点</strong>。</div></div>
+        <div class="row"><div class="k">做法</div><div class="v">
+          断言要写「真断言」——早期我写过 <code>expect(x).toBe(y) || true</code> 这种假测试，等于没测；<br>
+          不能想当然——原本断言「GCJ-02 一定把点往南偏」，实测北京是<strong>向北偏 156 米</strong>；原本以为境外不受影响，实测新加坡落在矩形境内，偏移 167 米；<br>
+          <code>Number(null) === 0</code> 是有限数，所以校验坐标必须先排 <code>null / undefined / ''</code>，否则空值会被当成有效坐标 (0, 0) 画到几内亚湾。
+        </div></div>
+        <div class="fb"><strong>核心经验：</strong>有了测试，AI 第二轮基本能收敛。地图代码的正确性不能靠肉眼 review，要靠可执行的几何断言。</div>
+      </div>
+    </div>
+
+    <div class="lesson">
+      <div class="head"><span class="idx">04</span>产品上最难的不是做出来，是定义「边界」</div>
+      <div class="body">
+        <div class="row"><div class="k">纠结</div><div class="v">
+          不在围栏内的人，该禁止进入还是允许只读？我们选了<strong>只读</strong>——因为「看看隔壁街区在聊什么」本身就是吸引力，也是让人想走过去的理由；<br>
+          围栏尺度多大才算「附近」？最后定四档，把抽象的「附近」翻译成「一栋楼 / 一个街区 / 一个园区 / 一片城区」，用户一秒就懂；<br>
+          什么时候让内容消失？给了 24h / 7 天 / 永久三档，而不是替用户决定。
+        </div></div>
+        <div class="fb"><strong>反馈建议：</strong>做 LBS 产品，建议平台能提供「围栏冲突检测」「空间密度提示」这类现成能力——当两个人想在同一个位置建围栏时怎么办，是个真问题，不该每个开发者自己造。</div>
+      </div>
+    </div>
+
+    <div class="lesson">
+      <div class="head"><span class="idx">05</span>关于底图与合规</div>
+      <div class="body">
+        <div class="row"><div class="k">友好</div><div class="v">腾讯瓦片服务返回 <code>access-control-allow-origin: *</code>，浏览器可直连；其私有规则（TMS 行号翻转、<code>(x + ry) % 4</code> 子域）用前端自定义协议即可消化，<strong>不需要自建代理</strong>，对小作品非常友好。</div></div>
+        <div class="row"><div class="k">边界</div><div class="v">腾讯返回的是<strong>服务端渲染好的 PNG，不是 MVT 矢量切片</strong>，所以底图样式只能用官方预设 styleid，无法自定义道路 / 水域配色；想自定义配色需要走 JSAPI GL（矢量）路线。</div></div>
+        <div class="row"><div class="k">合规</div><div class="v">明文 Key 只适用于本地演示，<strong>公网发布必须走代理转发</strong>，把 Key 收在服务端。参赛作品尤其要注意这一点。</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span>附件</span><span class="n">可供下载安装与二次创作</span></h2>
+    <h3>Skill</h3>
+    <table>
+      <tr><th style="width:280px">Skill</th><th>说明</th></tr>
+      <tr>
+        <td><code>@tencent-adm/tencentmap-jsapi-gl-skill</code></td>
+        <td>腾讯地图 JSAPI GL 官方开发技能（矢量底图、覆盖物、可视化图层、检索、路线规划等），21 篇 API 文档 + 146 个 HTML 示例。<br>
+        安装：<code>skillhub install tencentmap-jsapi-gl-skill --namespace tencent-adm --dir ~/.workbuddy/skills/</code></td>
+      </tr>
+    </table>
+    <h3>本项目可复用的三层代码</h3>
+    <table>
+      <tr><th style="width:200px">文件</th><th style="width:260px">作用</th><th>为什么值得复用</th></tr>
+      <tr><td><code>src/lib/coords.js</code></td><td>WGS-84 ↔ GCJ-02 双向转换、GeoJSON 整体转换</td><td>国内底图必踩的坑，含 44 个单测</td></tr>
+      <tr><td><code>src/lib/fence.js</code></td><td>点在多边形内（射线法）、Haversine、圆转多边形、质心、外接半径</td><td>59 个单测，Web / RN 双端共用同一份逻辑</td></tr>
+      <tr><td><code>src/lib/tmapBasemap.js</code></td><td>腾讯瓦片底图接入（自定义协议、TMS 翻转、子域、4 种风格切换）</td><td>一份文件接好国内底图，无需后端代理</td></tr>
+    </table>
+    <h3>访问方式</h3>
+    <ul>
+      <li><strong>在线体验</strong>：https://nut-here-now.app-tencent.workbuddy.host/</li>
+      <li><strong>本地运行</strong>：<code>npm install &amp;&amp; npm run dev</code>（需配置 <code>.env</code> 中的 Supabase 地址与匿名 Key）</li>
+      <li><strong>数据库</strong>：执行 <code>supabase/fence_migration.sql</code> 为聊天室表补上围栏字段</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span>已知的边界</span><span class="n">诚实交代</span></h2>
+    <ul>
+      <li>越界目前是「可进但只读」，还没收紧成「禁止进入」——这是产品选择，不是技术限制。</li>
+      <li>围栏冲突检测（两人想在同位置建围栏）、密码准入、信用分体系：PRD 里有设计，本次<strong>刻意没做</strong>，为了守住「空间 + 时间」这个核心闭环。</li>
+      <li>移动端（React Native）代码已完成并用同一套围栏 / 坐标逻辑，但依赖原生编译，本次参赛以 Web 链接为准。</li>
+    </ul>
+  </section>
+
+  <div class="closing">算法能猜你喜欢什么，但它不知道你此刻站在哪儿。<br>此时此地想补上的，就是这一块。</div>
+
+  <footer>宫赫（hermygong）· 腾讯地图 · 2026-10</footer>
+</div>
+</body>
+</html>
