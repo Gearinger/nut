@@ -3,8 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>nut-app</title>
+    <!-- viewport-fit=cover：配合 env(safe-area-inset-*) 适配 iPhone 刘海/底部安全区 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>此时此地 · 在场才能说话</title>
+    <meta name="description" content="以地理围栏为唯一通行证的临时信息板：堵车、演唱会、市集、临时活动现场，人在那儿才能看见并参与。" />
+    <!-- 浏览器 UI（地址栏）配色，随主题切换由 src/lib/theme.js 更新 -->
+    <meta name="theme-color" content="#faf9fc" />
+    <!-- 主题在首屏前同步应用，避免深色用户看到一闪而过的浅色 -->
+    <script>
+      (function () {
+        try {
+          var s = localStorage.getItem('nut-theme');
+          var dark = s ? s === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        } catch (e) {
+          document.documentElement.dataset.theme = 'light';
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

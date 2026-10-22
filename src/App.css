@@ -8,50 +8,107 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #f5f5f5;
+  background: var(--bg-subtle);
 }
 
 /* App Layout */
 .app {
   height: 100vh;
+  /* 移动端浏览器地址栏收起/展开时 vh 会跳动，支持的浏览器优先用 dvh */
+  height: 100dvh;
   width: 100%;
   display: flex;
   flex-direction: column;
-  background: #fff;
+  background: var(--bg-surface);
 }
 
-@media (min-width: 768px) {
+/* 平板：居中窄栏，避免单行文字过长 */
+@media (min-width: 768px) and (max-width: 1023px) {
   .app {
-    max-width: 500px;
+    max-width: 680px;
     margin: 0 auto;
+    box-shadow: 0 0 24px rgba(0, 0, 0, 0.06);
+  }
+}
+
+/* PC：放宽容器（原为 500px，两侧大片空白），首页内部再左右分栏 */
+@media (min-width: 1024px) {
+  .app {
+    max-width: 1200px;
+    margin: 0 auto;
+    box-shadow: 0 0 24px rgba(0, 0, 0, 0.06);
   }
 }
 
 .content {
   flex: 1;
-  overflow: hidden;
+  /* 兜底：任何页面忘记自己处理滚动时，至少整体能滚，而不是把内容裁掉。
+     各页面内部已有滚动容器的（square/chat/profile）不会触发这里的外层滚动条。 */
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* ============================================================
+   全局交互基础
+   ------------------------------------------------------------
+   之前按钮/输入框只有默认态：鼠标悬停没反应、键盘 Tab 过去看不出
+   焦点在哪，点下去也没有按下反馈。这里统一补齐：
+     · :focus-visible  —— 键盘可达性（WCAG 2.4.7），鼠标点击不显示
+     · hover / active  —— 指针反馈
+     · 统一过渡        —— 用 token 的时长，避免各处快慢不一
+   ============================================================ */
+
+/* 键盘焦点环：只对键盘用户显示，鼠标点击不出现 */
+:where(button, a, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* 尊重「减少动态效果」的系统设置 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
 
 /* Tab Bar */
 .tab-bar {
   display: flex;
-  border-top: 1px solid #eee;
-  background: #fff;
-  padding: 8px 0;
+  border-top: 1px solid var(--border);
+  background: var(--bg-surface);
+  padding: var(--space-2) 0;
 }
 
 .tab {
   flex: 1;
   border: none;
   background: none;
-  padding: 8px;
-  font-size: 14px;
-  color: #666;
+  /* 触控目标不小于 44px：8px 上下内边距 + 内容高度 */
+  padding: 10px var(--space-2);
+  min-height: var(--tap-min);
+  font-size: var(--font-base);
+  color: var(--text-secondary);
   cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.tab:hover {
+  color: var(--color-primary);
+  background: var(--bg-subtle);
+}
+
+.tab:active {
+  background: var(--bg-subtle-strong);
 }
 
 .tab.active {
-  color: #007AFF;
+  color: var(--color-primary);
+  font-weight: 600;
 }
 
 /* Login Page */
@@ -71,24 +128,81 @@ body {
 }
 
 .login-page p {
-  color: #666;
+  color: var(--text-secondary);
   margin-bottom: 30px;
+}
+
+/* —— 表单控件基础态 ——
+   输入框此前只有静态边框，聚焦时看不出「光标在哪」。
+   这里统一 focus 反馈：边框变主色 + 一圈柔和外发光。 */
+input,
+textarea {
+  font-family: inherit;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+input:focus,
+textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+  outline: none; /* 已有 focus-visible 环给键盘用户，这里避免双环 */
 }
 
 .login-page input {
   width: 100%;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  padding: var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  /* 16px 是 iOS Safari 的临界值：小于它会触发自动缩放 */
   font-size: 16px;
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
+}
+
+/* —— 加载态 ——
+   App 启动时只有一行「加载中...」纯文字，没有视觉反馈。 */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-8);
+  color: var(--text-muted);
+  font-size: var(--font-base);
+}
+
+.loading::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 700ms linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* —— 空态 ——
+   空态不只是「没有数据」，还该告诉用户下一步能做什么。 */
+.empty {
+  color: var(--text-muted);
+  text-align: center;
+  padding: var(--space-5) var(--space-4);
+  font-size: var(--font-base);
+  background: var(--bg-subtle);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border);
 }
 
 .login-page button {
   width: 100%;
   padding: 12px;
-  background: #007AFF;
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--text-on-primary);
   border: none;
   border-radius: 8px;
   font-size: 16px;
@@ -96,27 +210,21 @@ body {
 }
 
 .login-page button:disabled {
-  background: #ccc;
+  background: var(--bg-subtle-strong);
 }
 
 .login-page .error {
-  color: #ff3b30;
+  color: var(--color-error);
   font-size: 14px;
   margin-bottom: 12px;
 }
 
-.switch-mode {
+/* 花名登录页下方的说明文字 */
+.login-hint {
   margin-top: 20px;
-  font-size: 14px;
-}
-
-.switch-mode button {
-  background: none;
-  border: none;
-  color: #007AFF;
-  cursor: pointer;
-  font-size: 14px;
-  padding: 0 4px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-muted);
 }
 
 /* Home Page */
@@ -126,9 +234,18 @@ body {
   flex-direction: column;
 }
 
-.map-container {
+/* 地图区域：作为浮层（底图切换 / FAB）的定位上下文。
+   原来是 fixed 相对视口，PC 上会脱离容器跑到屏幕边缘。 */
+.map-area {
+  position: relative;
   flex: 1;
   min-height: 40vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.map-container {
+  flex: 1;
   width: 100%;
 }
 
@@ -141,17 +258,82 @@ body {
   cursor: pointer;
 }
 
+.map-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.map-marker.me-marker {
+  width: 16px;
+  height: 16px;
+  background: var(--color-info);
+  border: 3px solid var(--bg-surface);
+  box-shadow: 0 0 0 6px rgba(55, 138, 221, 0.25);
+}
+
+.maplibregl-popup-content {
+  padding: 10px 12px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.map-popup {
+  max-width: 200px;
+}
+
+.map-popup .popup-author {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.map-popup p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
 .bottom-sheet {
-  background: #fff;
+  background: var(--bg-surface);
   border-radius: 16px 16px 0 0;
   padding: 16px;
+  /* 适配 iPhone 底部安全区（需配合 index.html 的 viewport-fit=cover） */
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+}
+
+/* 区块标题 + 右侧数量说明（截断提示 / 滑动提示） */
+.sheet-section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .nearby-list h3 {
   font-size: 14px;
-  color: #666;
+  color: var(--text-secondary);
   margin: 12px 0 8px;
+}
+
+.list-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  /* 标题靠左，说明文字不参与抢空间 */
+  flex-shrink: 0;
 }
 
 .notes-scroll, .rooms-scroll {
@@ -160,6 +342,8 @@ body {
   overflow-x: auto;
   padding-bottom: 8px;
   -webkit-overflow-scrolling: touch;
+  /* 横向滑动时卡片逐张对齐，不会停在半张的位置 */
+  scroll-snap-type: x mandatory;
 }
 
 /* 竖直留言列表 */
@@ -173,7 +357,7 @@ body {
 
 /* Note Card */
 .note-card {
-  background: #f9f9f9;
+  background: var(--bg-subtle);
   border-radius: 8px;
   padding: 12px;
 }
@@ -194,11 +378,11 @@ body {
   display: flex;
   gap: 8px;
   font-size: 12px;
-  color: #999;
+  color: var(--text-muted);
 }
 
 .note-meta .expiry {
-  color: #007AFF;
+  color: var(--color-primary);
 }
 
 /* Note Card 新样式 */
@@ -211,18 +395,18 @@ body {
 
 .note-header .author {
   font-weight: 500;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .note-header .time {
   font-size: 12px;
-  color: #999;
+  color: var(--text-muted);
 }
 
 .note-text {
   font-size: 15px;
   line-height: 1.5;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 10px;
 }
 
@@ -235,8 +419,8 @@ body {
 .expiry-tag {
   font-size: 11px;
   padding: 2px 8px;
-  background: #e3f2fd;
-  color: #1976d2;
+  background: var(--color-info-soft);
+  color: var(--color-primary);
   border-radius: 10px;
 }
 
@@ -249,7 +433,7 @@ body {
   background: none;
   border: none;
   font-size: 13px;
-  color: #666;
+  color: var(--text-secondary);
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 4px;
@@ -257,7 +441,7 @@ body {
 }
 
 .action-btn:hover {
-  background: #f0f0f0;
+  background: var(--bg-subtle);
 }
 
 .action-btn.liking {
@@ -265,7 +449,7 @@ body {
 }
 
 .note-replies {
-  background: #f5f5f5;
+  background: var(--bg-subtle);
   border-radius: 6px;
   padding: 8px 10px;
   margin: 8px 0;
@@ -282,11 +466,11 @@ body {
 
 .replies-more {
   font-size: 13px;
-  color: #1976d2;
+  color: var(--color-primary);
   cursor: pointer;
   margin-top: 6px;
   padding-top: 6px;
-  border-top: 1px dashed #ddd;
+  border-top: 1px dashed var(--border-strong);
 }
 
 .replies-more:hover {
@@ -294,12 +478,12 @@ body {
 }
 
 .reply-author {
-  color: #1976d2;
+  color: var(--color-primary);
   margin-right: 6px;
 }
 
 .reply-content {
-  color: #333;
+  color: var(--text-primary);
 }
 
 .reply-input-wrapper {
@@ -307,21 +491,21 @@ body {
   gap: 8px;
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--border);
 }
 
 .reply-input-wrapper input {
   flex: 1;
   padding: 8px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-strong);
   border-radius: 16px;
   font-size: 14px;
 }
 
 .reply-input-wrapper button {
   padding: 8px 16px;
-  background: #007AFF;
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--text-on-primary);
   border: none;
   border-radius: 16px;
   font-size: 13px;
@@ -329,7 +513,7 @@ body {
 }
 
 .reply-input-wrapper button:disabled {
-  background: #ccc;
+  background: var(--bg-subtle-strong);
 }
 
 /* 留言广场页面 */
@@ -342,7 +526,7 @@ body {
 
 .square-header {
   padding: 16px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border);
 }
 
 .square-header h2 {
@@ -352,7 +536,7 @@ body {
 
 .square-header .subtitle {
   font-size: 13px;
-  color: #999;
+  color: var(--text-muted);
 }
 
 .square-list {
@@ -367,7 +551,7 @@ body {
 
 .empty-state {
   text-align: center;
-  color: #999;
+  color: var(--text-muted);
   padding: 40px 20px;
 }
 
@@ -378,10 +562,15 @@ body {
 /* Room Card */
 .room-card {
   min-width: 160px;
-  background: #f0f7ff;
+  background: var(--color-primary-soft);
   border-radius: 8px;
   padding: 12px;
   cursor: pointer;
+  /* 横向滚动容器里：不压缩、逐张吸附；
+     max-width 让首张露出下一张的边缘，暗示「后面还有，可以滑」 */
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  max-width: 76%;
 }
 
 .room-info {
@@ -397,32 +586,90 @@ body {
 
 .room-type {
   font-size: 12px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .room-meta {
   display: flex;
   gap: 8px;
   font-size: 12px;
-  color: #999;
+  color: var(--text-muted);
   margin-bottom: 8px;
 }
 
 .join-btn {
   width: 100%;
-  padding: 6px;
-  background: #007AFF;
-  color: #fff;
+  padding: 8px;
+  background: var(--color-primary);
+  color: var(--text-on-primary);
   border: none;
-  border-radius: 4px;
-  font-size: 12px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-sm);
   cursor: pointer;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.join-btn:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.join-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.join-btn:disabled {
+  background: var(--bg-subtle-strong);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+/* —— 通用按钮反馈 ——
+   之前除 .action-btn 外，多数按钮只有默认态：悬停无反应、按下无反馈、
+   禁用也看不出来。这里给主要按钮类统一补齐三种状态。 */
+.edit-btn,
+.logout-btn,
+.fence-btn,
+.picker-random {
+  transition: background-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast),
+    opacity var(--transition-fast);
+}
+
+.edit-btn:hover,
+.picker-random:hover:not(:disabled) {
+  background: var(--bg-subtle-strong);
+}
+
+.edit-btn:active,
+.logout-btn:active,
+.picker-random:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.fence-btn.primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  box-shadow: var(--shadow-md);
+}
+
+.fence-btn.ghost:hover {
+  background: var(--bg-subtle-strong);
+}
+
+.logout-btn:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* 禁用态统一：所有按钮一致，避免各自写一份 opacity */
+button:disabled {
+  cursor: not-allowed;
 }
 
 /* FAB */
 .fab {
-  position: fixed;
-  right: 20px;
+  /* absolute 相对 .map-area，PC 分栏时不会压到侧边栏上 */
+  position: absolute;
+  right: 16px;
   width: 56px;
   height: 56px;
   border-radius: 50%;
@@ -433,13 +680,404 @@ body {
 }
 
 .note-fab {
-  bottom: 200px;
-  background: #fff;
+  bottom: 84px;
+  background: var(--bg-surface);
 }
 
 .room-fab {
-  bottom: 130px;
-  background: #007AFF;
+  bottom: 16px;
+  background: var(--color-primary);
+}
+
+/* ============================================================
+   围栏编辑器与拖拽手柄
+   创建聊天室 = 创建地理围栏，绘制交互发生在地图上，
+   这个面板只负责名称、形状与半径档位。
+   ============================================================ */
+.fence-editor {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 8;
+  background: var(--bg-surface);
+  border-radius: 16px;
+  padding: 14px 16px 16px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 62%;
+  overflow-y: auto;
+}
+
+.fence-editor-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fence-editor-head h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.fence-editor-close {
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 6px;
+}
+
+.fence-editor-input {
+  width: 100%;
+  height: 42px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0 12px;
+  font-size: 15px;
+  box-sizing: border-box;
+}
+
+.fence-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fence-label {
+  font-size: 13px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fence-value {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.fence-shape-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.fence-shape-btn {
+  flex: 1;
+  padding: 9px 0;
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.fence-shape-btn.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--text-on-primary);
+}
+
+.fence-radius-chips {
+  display: flex;
+  gap: 8px;
+}
+
+.fence-chip {
+  flex: 1;
+  padding: 8px 0;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  border-radius: 9px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.fence-chip.active {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.fence-slider {
+  width: 100%;
+}
+
+.fence-vertex-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.fence-vertex-actions button {
+  flex: 1;
+  padding: 9px 0;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  border-radius: 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.fence-vertex-actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.fence-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.fence-editor-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.fence-summary {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.fence-editor-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.fence-btn {
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.fence-btn.ghost {
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+}
+
+.fence-btn.primary {
+  background: var(--color-primary);
+  color: var(--text-on-primary);
+}
+
+.fence-btn.primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* 地图按需加载时的占位（盖在地图容器上，加载完自动消失） */
+.map-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  font-size: var(--font-base);
+  pointer-events: none; /* 不挡地图交互 */
+}
+
+/* 地图上的围栏手柄 */
+.fence-handle {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 3px solid var(--bg-surface);
+  background: var(--color-primary);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  cursor: grab;
+  box-sizing: border-box;
+}
+
+.fence-handle-radius {
+  width: 16px;
+  height: 16px;
+  background: var(--bg-surface);
+  border-color: var(--color-primary);
+  cursor: ew-resize;
+}
+
+.fence-vertex {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--text-on-primary);
+  font-size: 11px;
+  line-height: 16px;
+  text-align: center;
+  border: 2px solid var(--bg-surface);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  box-sizing: border-box;
+}
+
+/* 聊天室卡片：围栏内外的状态区分 */
+.room-card.outside-fence {
+  opacity: 0.72;
+  background: var(--bg-subtle);
+}
+
+.room-fence {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.room-card.outside-fence .room-fence {
+  color: var(--color-error);
+}
+
+.room-card.outside-fence .join-btn {
+  background: var(--bg-subtle-strong);
+}
+
+/* 聊天页：不在围栏内时内容置灰只读 */
+.fence-banner {
+  padding: 10px 16px;
+  background: var(--color-error-soft);
+  color: var(--color-error);
+  font-size: 13px;
+  line-height: 1.5;
+  border-bottom: 1px solid var(--color-error-border);
+}
+
+.messages-list.fence-locked {
+  filter: grayscale(1);
+  opacity: 0.6;
+}
+
+.chat-input input:disabled {
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+}
+
+/* 定位状态条（左上角） */
+.locate-banner {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(360px, calc(100% - 140px));
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.14);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-primary);
+  backdrop-filter: blur(6px);
+}
+
+.locate-banner.locate-failed {
+  border-left: 3px solid var(--color-warning);
+}
+
+.locate-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.locate-retry {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 6px;
+  background: var(--color-primary);
+  color: var(--text-on-primary);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.locate-retry:hover {
+  background: var(--color-primary-active);
+}
+
+.locate-icon {
+  flex-shrink: 0;
+}
+
+.locate-spinner {
+  flex-shrink: 0;
+  width: 13px;
+  height: 13px;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: locate-spin 0.8s linear infinite;
+}
+
+@keyframes locate-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 底图切换器（右上角） */
+.basemap-switcher {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.basemap-toggle {
+  padding: 8px 14px;
+  border-radius: 18px;
+  border: none;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+.basemap-menu {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.97);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+.basemap-option {
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.basemap-option:hover {
+  background: var(--bg-subtle);
+}
+
+.basemap-option.active {
+  color: var(--color-primary);
+  font-weight: 600;
 }
 
 /* Modal */
@@ -456,7 +1094,7 @@ body {
 }
 
 .modal {
-  background: #fff;
+  background: var(--bg-surface);
   width: 100%;
   max-width: 500px;
   border-radius: 16px 16px 0 0;
@@ -470,7 +1108,7 @@ body {
 .modal textarea, .modal input {
   width: 100%;
   padding: 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   font-size: 16px;
   margin-bottom: 12px;
@@ -483,14 +1121,14 @@ body {
 
 .modal select {
   padding: 8px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-strong);
   border-radius: 4px;
   font-size: 14px;
 }
 
 .location-info {
   font-size: 12px;
-  color: #666;
+  color: var(--text-secondary);
   margin-bottom: 12px;
 }
 
@@ -509,12 +1147,12 @@ body {
 }
 
 .modal-actions button:first-child {
-  background: #f0f0f0;
+  background: var(--bg-subtle);
 }
 
 .modal-actions button:last-child {
-  background: #007AFF;
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--text-on-primary);
 }
 
 /* Chat Page */
@@ -527,7 +1165,7 @@ body {
 .chat-page.empty {
   justify-content: center;
   align-items: center;
-  color: #999;
+  color: var(--text-muted);
 }
 
 /* 我的聊天室列表 */
@@ -542,7 +1180,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 14px 16px;
-  background: #f9f9f9;
+  background: var(--bg-subtle);
   border-radius: 10px;
   margin-bottom: 10px;
   cursor: pointer;
@@ -550,7 +1188,7 @@ body {
 }
 
 .my-room-item:hover {
-  background: #f0f0f0;
+  background: var(--bg-subtle);
 }
 
 .my-room-item .room-info {
@@ -562,12 +1200,12 @@ body {
 .my-room-item .room-name {
   font-size: 15px;
   font-weight: 500;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .my-room-item .room-creator {
   font-size: 12px;
-  color: #999;
+  color: var(--text-muted);
 }
 
 .my-room-item .room-status {
@@ -576,7 +1214,7 @@ body {
 
 .chat-header {
   padding: 12px 16px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -587,7 +1225,7 @@ body {
   background: none;
   border: none;
   font-size: 14px;
-  color: #007AFF;
+  color: var(--color-primary);
   cursor: pointer;
   padding: 4px 0;
 }
@@ -601,7 +1239,7 @@ body {
 }
 
 .action-btn.liked {
-  color: #ff3b30;
+  color: var(--color-error);
 }
 
 .messages-list {
@@ -624,13 +1262,35 @@ body {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #ddd;
+  background: var(--bg-subtle-strong);
 }
 
 .avatar-placeholder.large {
   width: 60px;
   height: 60px;
   font-size: 24px;
+}
+
+/* —— emoji 头像 ——
+   用 emoji 当头像，不上传图片：没有存储/审核成本，小尺寸辨识度也够。 */
+.avatar-emoji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-subtle);
+  font-size: 20px;
+  line-height: 1;
+}
+
+/* 没有头像时回落到昵称首字，用浅色底区分于真头像 */
+.avatar-emoji.placeholder {
+  background: var(--bg-subtle-strong);
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .message-content {
@@ -643,19 +1303,19 @@ body {
 
 .sender {
   font-size: 12px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .message-content p {
-  background: #f0f0f0;
+  background: var(--bg-subtle);
   padding: 8px 12px;
   border-radius: 12px;
   display: inline-block;
 }
 
 .message.own .message-content p {
-  background: #007AFF;
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--text-on-primary);
 }
 
 .read-status {
@@ -665,40 +1325,56 @@ body {
 }
 
 .read-status.read {
-  color: #34c759;
+  color: var(--color-success);
 }
 
 .read-status.unread {
-  color: #999;
+  color: var(--text-muted);
 }
 
 .chat-input {
   display: flex;
   gap: 8px;
   padding: 12px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--border);
 }
 
 .chat-input input {
   flex: 1;
   padding: 10px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-strong);
   border-radius: 20px;
   font-size: 14px;
 }
 
 .chat-input button {
   padding: 10px 20px;
-  background: #007AFF;
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--text-on-primary);
   border: none;
   border-radius: 20px;
   cursor: pointer;
 }
 
+.chat-page .send-error {
+  padding: 8px 16px;
+  background: var(--color-error-soft);
+  color: var(--color-error);
+  font-size: 13px;
+  border-top: 1px solid var(--color-error-border);
+}
+
 /* Profile Page */
 .profile-page {
   padding: 20px;
+  /* 内容超出时必须能整体滚动：外层 .content 是 overflow:hidden，
+     这里不设高度+滚动的话，底部的「退出登录」会被直接裁掉，点不到。
+     与 .square-page / .chat-page 保持同一套做法。 */
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  /* 滚到底时给按钮留出呼吸空间，避免贴着 tab-bar */
+  padding-bottom: 24px;
 }
 
 .profile-header {
@@ -706,8 +1382,91 @@ body {
   margin-bottom: 20px;
 }
 
+/* 大头像本身是按钮：点一下展开 emoji 选择器 */
 .avatar-large {
   margin-bottom: 12px;
+  /* button 默认带内边距/边框，会把圆形头像撑变形 */
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.avatar-large .avatar-emoji {
+  width: 72px;
+  height: 72px;
+  font-size: 40px;
+}
+
+.avatar-large .avatar-emoji.placeholder {
+  font-size: 28px;
+}
+
+.avatar-large img {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* emoji 选择器 */
+.avatar-picker {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  margin: 0 0 16px;
+}
+
+.picker-tip {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 0 0 8px;
+}
+
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+
+.avatar-option {
+  font-size: 22px;
+  line-height: 1;
+  padding: 6px 0;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: var(--bg-surface);
+  cursor: pointer;
+}
+
+.avatar-option:hover:not(:disabled) {
+  background: var(--bg-subtle-strong);
+}
+
+.avatar-option.selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.avatar-option:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.picker-random {
+  margin-top: 10px;
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  cursor: pointer;
+}
+
+.picker-random:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .profile-info h2 {
@@ -716,7 +1475,7 @@ body {
 
 .edit-btn {
   padding: 6px 16px;
-  background: #f0f0f0;
+  background: var(--bg-subtle);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -741,7 +1500,7 @@ body {
 
 .stat .label {
   font-size: 12px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .profile-content section {
@@ -750,30 +1509,296 @@ body {
 
 .profile-content h3 {
   font-size: 14px;
-  color: #666;
+  color: var(--text-secondary);
   margin-bottom: 8px;
+}
+
+.profile-msg,
+.reply-error {
+  flex-basis: 100%;
+  font-size: 12px;
+  color: var(--color-error);
+  margin: 4px 0 0;
 }
 
 .note-item, .room-item {
   padding: 12px;
-  background: #f9f9f9;
+  background: var(--bg-subtle);
   border-radius: 8px;
   margin-bottom: 8px;
 }
 
+/* 房间名与状态分列两端；之前缺 flex，两个 span 挤成一串（“xx房间活跃”） */
+.room-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.room-item .name {
+  font-weight: 500;
+}
+
+.room-item .type {
+  flex-shrink: 0;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.room-item .type.active {
+  color: var(--color-success);
+  background: var(--color-success-soft);
+}
+
+.room-item .type.inactive {
+  color: var(--text-muted);
+  background: var(--bg-subtle);
+}
+
+/* 「关闭 / 重新打开」按钮：默认低调，危险操作用红色描边区分 */
+.room-item .room-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.room-toggle-btn {
+  min-height: 32px;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 8px);
+  cursor: pointer;
+  transition: color .2s, border-color .2s, background .2s;
+}
+
+.room-toggle-btn:hover:not(:disabled) {
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+.room-toggle-btn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+/* 聊天室结果提示：成功中性，失败才标红 */
+.room-msg {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 8px 0 0;
+}
+
+.room-msg.error {
+  color: var(--color-error);
+}
+
+.chat-header .header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.room-close-btn {
+  min-height: 32px;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 8px);
+  cursor: pointer;
+  transition: color .2s, border-color .2s;
+}
+
+.room-close-btn:hover:not(:disabled) {
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+.room-close-btn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
 .empty {
-  color: #999;
+  color: var(--text-muted);
   text-align: center;
   padding: 20px;
+}
+
+/* 主题开关：整行可点，右侧是开关滑块 */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3);
+  margin-top: var(--space-2);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--font-base);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.theme-toggle:hover {
+  background: var(--bg-subtle-strong);
+}
+
+.theme-icon {
+  font-size: var(--font-lg);
+}
+
+.theme-switch {
+  margin-left: auto;
+  width: 40px;
+  height: 22px;
+  border-radius: var(--radius-pill);
+  background: var(--border-strong);
+  position: relative;
+  transition: background-color var(--transition-base);
+}
+
+.theme-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-base);
+}
+
+/* 深色模式下开关点亮（当前主题写在 <html data-theme> 上） */
+[data-theme='dark'] .theme-switch {
+  background: var(--color-primary);
+}
+
+[data-theme='dark'] .theme-switch::after {
+  transform: translateX(18px);
 }
 
 .logout-btn {
   width: 100%;
   padding: 12px;
-  background: #ff3b30;
-  color: #fff;
+  background: var(--color-error);
+  color: var(--text-on-primary);
   border: none;
   border-radius: 8px;
   cursor: pointer;
   margin-top: 20px;
+}
+
+/* ============================================================
+   响应式适配
+   < 768px    手机：地图 + 底部面板纵向堆叠
+   768~1023   平板：居中窄栏，纵向堆叠
+   >= 1024    PC：首页左右分栏（地图 + 380px 侧栏），列表内容限宽居中
+   ============================================================ */
+
+/* 小屏手机：缩小浮层，给地图腾出可视高度 */
+@media (max-width: 480px) {
+  .fab {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+  }
+
+  .note-fab {
+    bottom: 72px;
+  }
+
+  .room-fab {
+    bottom: 12px;
+  }
+
+  .notes-list {
+    max-height: 150px;
+  }
+
+  .map-popup {
+    max-width: 160px;
+  }
+
+  .basemap-switcher {
+    top: 12px;
+    right: 12px;
+  }
+}
+
+/* PC：首页改左右分栏，底部面板变成右侧栏 */
+@media (min-width: 1024px) {
+  .home-page {
+    flex-direction: row;
+  }
+
+  .map-area {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .bottom-sheet {
+    width: 380px;
+    flex-shrink: 0;
+    border-radius: 0;
+    border-left: 1px solid var(--border);
+    box-shadow: none;
+    padding-bottom: 16px;
+    overflow-y: auto;
+  }
+
+  /* 侧栏整栏滚动，留言列表不再单独限高 */
+  .notes-list {
+    max-height: none;
+    overflow: visible;
+  }
+
+  /* PC 上鼠标滚轮不支持横向滚动，侧栏又是固定 380px 宽——
+     聊天室卡片改纵向堆叠，全部直接可见，不再依赖横向滑动。 */
+  .rooms-scroll {
+    flex-direction: column;
+    overflow-x: visible;
+    scroll-snap-type: none;
+  }
+
+  .room-card {
+    max-width: none;
+    width: 100%;
+  }
+
+  /* 纵向堆叠后没有滑动这回事，提示语隐藏 */
+  .swipe-hint {
+    display: none;
+  }
+
+  /* 列表类内容限宽居中，避免 PC 上单行过长 */
+  .login-page {
+    max-width: 420px;
+    margin: 0 auto;
+  }
+
+  .square-list .note-card,
+  .my-room-item,
+  .messages-list > .message {
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .profile-page {
+    max-width: 720px;
+    margin: 0 auto;
+  }
 }
