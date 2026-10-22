@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { describeDbError } from './dbError'
 
 // 根据位置获取或创建区域
 // 默认区域半径为 1000 米
@@ -31,7 +32,20 @@ export async function getOrCreateArea(lat, lng, radius = 1000) {
     .single()
 
   if (error) {
-    console.error('创建区域失败:', error)
+    // 并发场景：另一个请求可能刚刚创建了同一片区域，再查一次复用它，
+    // 而不是直接失败掉整条「发留言 / 建聊天室」链路。
+    const { data: raced } = await supabase
+      .from('nut_areas')
+      .select('*')
+      .gte('latitude', lat - 0.01)
+      .lte('latitude', lat + 0.01)
+      .gte('longitude', lng - 0.01)
+      .lte('longitude', lng + 0.01)
+      .limit(1)
+
+    if (raced && raced.length > 0) return raced[0]
+
+    console.error('创建区域失败:', describeDbError(error))
     return null
   }
 
